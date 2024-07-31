@@ -7,10 +7,12 @@ export default class TransactionController {
 
     async get(req, res) {
         try {
-            const { page = 1, month } = req.query;
+            let { page = 1, month } = req.query;
             const search = req.query.search != undefined ? req.query.search : '';
             const pageSize = 10;
             let query = {};
+
+            page =parseInt(page);
 
             const monthNumber = parseInt(month);
             const transactions = await Transactions.find().populate({
@@ -38,6 +40,8 @@ export default class TransactionController {
                 "success": true,
                 "content": {
                     "data": paginatedResult,
+                    "currPage": page,
+                    "totalPages": Math.ceil(result.length/pageSize)
                 }
             });
         } catch (error) {
@@ -144,7 +148,7 @@ export default class TransactionController {
             res.status(200).json({
                 "success": true,
                 "content": {
-                    "data": data
+                    "data": data,
                 }
             });
         } catch (error) {
