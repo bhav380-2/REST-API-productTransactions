@@ -162,10 +162,9 @@ export default class TransactionController {
         const { month } = req.query;
 
         try {
-            const stats = await (await axios.get(`http://localhost:8000/transactions/stats?month=${month}`)).data;
-            const barChart = await (await axios.get(`http://localhost:8000/transactions/barchart?month=${month}`)).data;
-            const pieChart = await (await axios.get(`http://localhost:8000/transactions/piechart?month=${month}`)).data;
-
+            const stats = await (await axios.get(`http://localhost:8000/api/transactions/stats?month=${month}`)).data;
+            const barChart = await (await axios.get(`http://localhost:8000/api/transactions/barchart?month=${month}`)).data;
+            const pieChart = await (await axios.get(`http://localhost:8000/api/transactions/piechart?month=${month}`)).data;
             res.status(200).json({
                 "success": true,
                 "content": {

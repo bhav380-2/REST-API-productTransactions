@@ -8,6 +8,6 @@ router.get('/',transactionController.get);
 router.get('/stats',transactionController.stats);
 router.get('/barchart',transactionController.barChart);
 router.get('/piechart',transactionController.pieChart);
-router.get('/combine',transactionController.combine);
+router.get('/combined',transactionController.combine);
 
 export default router;
