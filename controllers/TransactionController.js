@@ -1,13 +1,11 @@
 import Transactions from "../models/TransactionSchema.js";
 import axios from "axios";
-// Helper function to get the month from a date
+// gets month name
 const getMonthFromDate = (date) => date.getMonth() + 1; // getMonth() is 0-indexed
-
 
 export default class TransactionController {
 
     async get(req, res) {
-
         try {
             const { page = 1, month } = req.query;
             const search = req.query.search != undefined ? req.query.search : '';
@@ -35,16 +33,14 @@ export default class TransactionController {
                 );
             }
 
-            // Apply pagination
             const paginatedResult = result.slice((page - 1) * pageSize, page * pageSize);
-            res.status(200).json({
+            return res.status(200).json({
                 "success": true,
                 "content": {
                     "data": paginatedResult,
                 }
             });
         } catch (error) {
-            console.log(error);
             res.status(500).send('Error fetching transactions: ' + error.message);
         }
     }
@@ -76,7 +72,6 @@ export default class TransactionController {
         }
     }
 
-
     async barChart(req, res) {
         const { month } = req.query;
         const monthNumber = parseInt(month);
@@ -92,49 +87,45 @@ export default class TransactionController {
                 { range: '301-400', count: 0 },
                 { range: '401-500', count: 0 },
                 { range: '501-600', count: 0 },
-                { range: '601-700',  count: 0 },
+                { range: '601-700', count: 0 },
                 { range: '701-800', count: 0 },
-                { range: '801-900',count: 0 },
+                { range: '801-900', count: 0 },
                 { range: '901-above', count: 0 }
             ];
 
-            let rangeSize =100;
+            let rangeSize = 100;
 
             filteredData.forEach(transaction => {
-                let index = Math.ceil(transaction.price*1.0/rangeSize) -1;
-                if(index>9){
-                    index=9
+                let index = Math.ceil(transaction.price * 1.0 / rangeSize) - 1;
+                if (index > 9) {
+                    index = 9
                 }
-                priceRanges[index].count+=1;
+                priceRanges[index].count += 1;
             });
 
             res.status(200).json({
-                "success":true,
-                "content":{
-                    "data":{
+                "success": true,
+                "content": {
+                    "data": {
                         priceRanges
-
-
                     }
                 }
             });
         } catch (error) {
-            console.log(error);
             res.status(500).send('Error fetching bar chart data: ' + error.message);
         }
     }
 
-
-    async pieChart(req,res){
+    async pieChart(req, res) {
 
         const { month } = req.query;
         const monthNumber = parseInt(month);
-    
+
         try {
-            const transactions = await Transactions.find().populate({path:'product',populate:{path:'category'}});
+            const transactions = await Transactions.find().populate({ path: 'product', populate: { path: 'category' } });
             const filteredData = transactions.filter(transaction => getMonthFromDate(transaction.dateOfSale) === monthNumber);
             const categories = {};
-    
+
             filteredData.forEach(transaction => {
                 const category = transaction.product.category.name;
                 if (!categories[category]) {
@@ -143,42 +134,17 @@ export default class TransactionController {
                 categories[category] += 1;
             });
 
-
-            // categories.forEach((category)=>{
-            //     let curr = {};
-            //     console.log(category);
-            //     curr['category'] = category.get(0);
-            //     curr['count'] = category.count;
-            //     data.push(curr);
-
-            // })
-
-            // categories.reduce((obj,category)=>{
-
-            //     console.log(category);
-            //     let curr = {};
-            //     curr['category'] = category.get(0);
-            //     curr['count'] = category.count;
-            //     data.push(curr);
-
-
-
-            // },{})
-
-    
             const data = Object.keys(categories).map(category => ({
                 category,
                 count: categories[category]
             }));
 
             // console.log(categories)
-
             // console.log(categoryData);
-    
             res.status(200).json({
-                "success":true,
-                "content":{
-                    "data":data
+                "success": true,
+                "content": {
+                    "data": data
                 }
             });
         } catch (error) {
@@ -187,34 +153,53 @@ export default class TransactionController {
         }
     }
 
+    async combine(req, res) {
 
-    async combine(req,res){
+        const { month } = req.query;
 
-            const { month } = req.query;
-        
-            try {
-                const stats = await (await axios.get(`http://localhost:8000/transactions/stats?month=${month}`)).data;
-                const barChart = await (await axios.get(`http://localhost:8000/transactions/barchart?month=${month}`)).data;
-                const pieChart = await (await axios.get(`http://localhost:8000/transactions/piechart?month=${month}`)).data;
-        
-                res.status(200).json({
-                    "success":true,
-                    "content":{
-                        "data":{
-                            "stats": stats.content.data,
-                            "barChartData": barChart.content.data,
-                            "pieChartData":pieChart.content.data
-                        }
+        try {
+            const stats = await (await axios.get(`http://localhost:8000/transactions/stats?month=${month}`)).data;
+            const barChart = await (await axios.get(`http://localhost:8000/transactions/barchart?month=${month}`)).data;
+            const pieChart = await (await axios.get(`http://localhost:8000/transactions/piechart?month=${month}`)).data;
+
+            res.status(200).json({
+                "success": true,
+                "content": {
+                    "data": {
+                        "stats": stats.content.data,
+                        "barChartData": barChart.content.data,
+                        "pieChartData": pieChart.content.data
                     }
-                });
-            } catch (error) {
-                console.log(error)
-                res.status(500).send('Error fetching combined data: ' + error.message);
-            }
-
+                }
+            });
+        } catch (error) {
+            console.log(error)
+            res.status(500).send('Error fetching combined data: ' + error.message);
+        }
     }
 }
 
 
 
 
+
+// categories.forEach((category)=>{
+//     let curr = {};
+//     console.log(category);
+//     curr['category'] = category.get(0);
+//     curr['count'] = category.count;
+//     data.push(curr);
+
+// })
+
+// categories.reduce((obj,category)=>{
+
+//     console.log(category);
+//     let curr = {};
+//     curr['category'] = category.get(0);
+//     curr['count'] = category.count;
+//     data.push(curr);
+
+
+
+// },{})
